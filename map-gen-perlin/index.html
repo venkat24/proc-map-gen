@@ -1,0 +1,31 @@
+<head>
+	<style>
+canvas {
+	display: block;
+	top: 5%;
+	width: 600px;
+	margin: 0 auto;
+}
+body {
+	text-align: center;
+}
+	</style>
+</head>
+<body>
+	<canvas></canvas>
+	<label>Seed</label>
+	<input type="range" onchange="seedSelect(event);" min="0" max="400" defaultValue="200">
+	<label>Exponent</label>
+	<input type="range" onchange="expSelect(event);" min="0.1" max="4" step='0.1' defaultValue="1.2">
+	<label>Wateriness</label>
+	<input type="range" onchange="waterSelect(event);" min="0" max="2" step='0.01' defaultValue="0.55"><br />
+	<label>Base Elevation</label>
+	<input type="range" onchange="elevationSelect(event);" min="0" max="0.5" step='0.01' defaultValue="0.2">
+	<label>Land Mass (Inv)</label>
+	<input type="range" onchange="landSlideSelect(event);" min="0" max="0.01" step='0.0001' defaultValue="0.002">
+	<label>Slope Factor</label>
+	<input type="range" onchange="slopeFactorSelect(event);" min="0.1" max="5" step='0.1' defaultValue="1">
+	<script src="perlin.js"></script>
+	<script src="voronoi.js"></script>
+	<script src="test.js"></script>
+</body>
