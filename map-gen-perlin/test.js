@@ -19,6 +19,17 @@ canvas.height = 600;
 var boardN = 600;
 var refreshRate = 1;
 var blockSize = 1;
+var centre = [300,300];
+function centreXSelect(event) {
+	centre[0] = Number(event.target.value);
+	logState();
+	proceduralGenerate();
+}
+function centreYSelect(event) {
+	centre[1] = Number(event.target.value);
+	logState();
+	proceduralGenerate();
+}
 document.body.appendChild(canvas);
 
 Math.seededRandom = function(min, max) {
@@ -40,6 +51,7 @@ function logState() {
 	console.log('Base Elevation ' + baseElevation);
 	console.log('Land Slope ' + landSlide);
 	console.log('Slope Factor ' + scaleFactor);
+	console.log('Centre Point ' + centre);
 	console.log('==========');
 }
 
@@ -169,7 +181,7 @@ function proceduralGenerate() {
 		var distance;
 		for( var i=0;i<boardN;i++) {
 			for (var j=0;j<boardN;j++) {
-				var distance = Math.sqrt(Math.pow(i-boardN/2,2) + Math.pow(j-boardN/2,2));
+				var distance = Math.sqrt(Math.pow(i-centre[0],2) + Math.pow(j-centre[1],2));
 				noiseVal = (1+noise.perlin2(i / 50, j / 50))/2
 					+ 0.5 *(1+noise.perlin2(i / 25, j / 25))/2
 					+ 0.2 *(1+noise.perlin2(i / 10, j / 10))/2;

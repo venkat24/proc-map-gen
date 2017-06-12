@@ -24,7 +24,11 @@ body {
 	<label>Land Mass (Inv)</label>
 	<input type="range" onchange="landSlideSelect(event);" min="0" max="0.01" step='0.0001' defaultValue="0.002">
 	<label>Slope Factor</label>
-	<input type="range" onchange="slopeFactorSelect(event);" min="0.1" max="5" step='0.1' defaultValue="1">
+    <input type="range" onchange="slopeFactorSelect(event);" min="0.1" max="5" step='0.1' defaultValue="1"><br />
+	<label>Centre Point X</label>
+    <input type="range" onchange="centreXSelect(event);" min="0" max="600" step='5' defaultValue="300">
+	<label>Centre Point Y</label>
+    <input type="range" onchange="centreYSelect(event);" min="0" max="600" step='5' defaultValue="300">
 	<script src="perlin.js"></script>
 	<script src="voronoi.js"></script>
 	<script src="test.js"></script>
