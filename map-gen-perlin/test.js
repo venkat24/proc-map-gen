@@ -5,6 +5,7 @@ function seedSelect(event) {
 	noise.seed(Math.seed % 65536);
 	logState();
 	proceduralGenerate();
+	drawWorld();
 }
 
 // Smaller the number, smaller the cells
@@ -19,16 +20,18 @@ canvas.height = 600;
 var boardN = 600;
 var refreshRate = 1;
 var blockSize = 1;
-var centre = [300,300];
+var centre = [boardN/2,boardN/2];
 function centreXSelect(event) {
 	centre[0] = Number(event.target.value);
 	logState();
 	proceduralGenerate();
+	drawWorld();
 }
 function centreYSelect(event) {
 	centre[1] = Number(event.target.value);
 	logState();
 	proceduralGenerate();
+	drawWorld();
 }
 document.body.appendChild(canvas);
 
@@ -50,101 +53,90 @@ function logState() {
 	console.log('Wateriness ' + wateriness);
 	console.log('Base Elevation ' + baseElevation);
 	console.log('Land Slope ' + landSlide);
-	console.log('Slope Factor ' + scaleFactor);
-	console.log('Centre Point ' + centre);
 	console.log('==========');
 }
 
-var freqExponent = 1.2;
+var freqExponent = 1.3;
 function expSelect(event) {
 	freqExponent = Number(event.target.value);
 	logState();
 	proceduralGenerate();
+	drawWorld();
 }
 var wateriness = 0.55;
 function waterSelect(event) {
 	wateriness = Number(event.target.value);
 	logState();
 	proceduralGenerate();
+	drawWorld();
 }
-var baseElevation = 0.32;
+var baseElevation = 0.28;
 function elevationSelect(event) {
 	baseElevation = Number(event.target.value);
 	logState();
 	proceduralGenerate();
+	drawWorld();
 }
-var landSlide = 0.002;
+var landSlide = 0.0031;
 function landSlideSelect(event) {
 	landSlide = Number(event.target.value);
 	logState();
 	proceduralGenerate();
+	drawWorld();
 }
 var scaleFactor = 1;
 function slopeFactorSelect(event) {
 	scaleFactor = Number(event.target.value);
 	logState();
 	proceduralGenerate();
+	drawWorld();
 }
 
-// Generation Constants
+var GridNode = function () {
+	return {
+		noise: 0,
+		biome: 'W',
+		moisture: 0,
+	}
+}
+
+var world = [];
+for( var i=0;i<boardN;i++) {
+	world[i] = [];
+	for( var j=0;j<boardN;j++) {
+		world[i][j] = GridNode();
+	}
+}
+
 function proceduralGenerate() {
-	var world = new Array(boardN);
-	for( var i=0;i<boardN;i++) {
-		world[i] = new Array(boardN);
-		for (var j=0;j<boardN;j++) {
-			world[i].push(0);
-		}
-	}
 
-	function getRandomColor() {
-		var letters = '56789ABCDEF';
-		var color = '#';
-		for (var i = 0; i < 6; i++ ) {
-			color += letters[Math.floor(Math.seededRandom() * letters.length)];
-		}
-		return color;
-	}
-
-	for(var i=0;i<boardN;i++) {
-		for (var j = 0; j < boardN; j++) {
-			indexSeed=Math.seededRandom(0,9999999999999999);
-			index=indexSeed%(boardN*cellSizeIndex);
-			if (index == 1) {
-				pointList.push({
-					point: [i,j],
-					color: getRandomColor(),
-				});
-			}
-		}
-	}
-
-	var voronoi = new Voronoi();
-	var bbox = {
-		xl: 0,
-		xr: boardN,
-		yt: 0,
-		yb: boardN,
-	}
-	var sites = [];
-	for(var currentPoint of pointList) {
-		sites.push({
-			x: currentPoint.point[0],
-			y: currentPoint.point[1]
-		});
-	}
+	//var voronoi = new Voronoi();
+	//var bbox = {
+		//xl: 0,
+		//xr: boardN,
+		//yt: 0,
+		//yb: boardN,
+	//}
+	//var sites = [];
+	//for(var currentPoint of pointList) {
+		//sites.push({
+			//x: currentPoint[0],
+			//y: currentPoint[1],
+		//});
+	//}
 	//var diagram = voronoi.compute(sites, bbox);
 	//console.log(diagram);
 
 	//var mCount = 0;
 	//function drawWorld () {
-		//for(var edge of diagram.edges) {
-			//var start = edge.va;
-			//var finish = edge.vb;
-			//context.beginPath();
-			//context.moveTo(start.x, start.y);
-			//context.lineTo(finish.x, finish.y);
-			//context.stroke();
-		//}
+	//for(var edge of diagram.edges) {
+	//var start = edge.va;
+	//var finish = edge.vb;
+	//context.beginPath();
+	//context.moveTo(start.x, start.y);
+	//context.lineTo(finish.x, finish.y);
+	//context.stroke();
+	//}
 	//}
 
 	function getNoiseShade(val) {
@@ -156,68 +148,134 @@ function proceduralGenerate() {
 		return color;
 	}
 
-	function getBiome(x) {
+	function getBiome(x,m) {
 		if(x < wateriness || isNaN(x))
-			return 'W';
+			return 'WATER';
 		else if ( x < wateriness + 0.05 )
-			return 'B';
+			return 'BEACH';
 		else if ( x < 0.40 + 0.4 )
-			return 'F';
+			return 'FOREST';
 		else if ( x < 0.40 + 0.55 )
-			return 'J';
+			return 'JUNGLE';
 		else if ( x < 0.40 + 0.8 )
-			return 'G';
+			return 'GRASSLAND';
 		else if ( x < 0.40 + 1 )
-			return 'M';
+			return 'MOUNTAIN';
 		else if ( x < 0.40 + 1.1 )
-			return 'C';
+			return 'CAPS';
 		else
-			return 'S';
+			return 'SNOW';
 	}
-
 
 	function getNoise() {
 		var noiseVal = 0;
+		var moistureVal = 0;
 		var distance;
 		for( var i=0;i<boardN;i++) {
 			for (var j=0;j<boardN;j++) {
 				var distance = Math.sqrt(Math.pow(i-centre[0],2) + Math.pow(j-centre[1],2));
-				noiseVal = (1+noise.perlin2(i / 50, j / 50))/2
-					+ 0.5 *(1+noise.perlin2(i / 25, j / 25))/2
-					+ 0.2 *(1+noise.perlin2(i / 10, j / 10))/2;
-					+ 0.1 *(1+noise.perlin2(i / 5, j / 5))/2;
-				noiseVal = noiseVal + baseElevation - Math.pow(landSlide*distance,scaleFactor)
-				world[i][j] = Math.pow(noiseVal, freqExponent);
+				noiseVal =
+					+	2  * (1+noise.perlin2(i / 100,j / 100))/2
+					+		 (1+noise.perlin2(i / 50, j /  50))/2
+					+ 0.5  * (1+noise.perlin2(i / 25, j /  25))/2
+					+ 0.2  * (1+noise.perlin2(i / 10, j /  10))/2
+					//+ 0.1  * (1+noise.perlin2(i / 5 , j /  5 ))/2
+					//+ 0.02 * (1+noise.perlin2(i		, j		 ))/2;
+				noiseVal/=2;
+				noiseVal = noiseVal + baseElevation - Math.pow(landSlide*distance,scaleFactor);
+				moistureVal =
+					  0.5  * (1+noise.simplex2(i / 25, j /  25))/2
+					+ 0.2  * (1+noise.simplex2(i / 10, j /  10))/2
+					+ 0.1  * (1+noise.simplex2(i / 5 , j /  5 ))/2
+					+ 0.02 * (1+noise.simplex2(i	 , j	  ))/2;
+
+				world[i][j].noise = Math.pow(noiseVal, freqExponent);
+				world[i][j].moisture = moistureVal;
 			}
 		}
+		console.log('Noise Set');
 		for( var i=0;i<boardN;i++) {
 			for (var j=0;j<boardN;j++) {
-				biomeType = getBiome(world[i][j]);
-				context.beginPath();
-				context.rect(blockSize*i,blockSize*j,blockSize,blockSize);
-				switch(biomeType){
-					case 'S': context.fillStyle = '#FFFFFF'
-						break;
-					case 'B': context.fillStyle = '#3CC3FC';
-						break;
-					case 'F': context.fillStyle = '#3E7E62';
-						break;
-					case 'J': context.fillStyle = '#A5BD7E';
-						break;
-					case 'G': context.fillStyle = '#BED2AE';
-						break;
-					case 'M': context.fillStyle = '#888888';
-						break;
-					case 'C': context.fillStyle = '#AAAAAA';
-						break;
-					case 'W': context.fillStyle = '#1CA3EC';
-						break;
-				}
-				context.fill();
+				world[i][j].biome = getBiome(world[i][j].noise,world[i][j].moisture);
 			}
 		}
+		function getAdjacentPoints (x,y) {
+			var adj = [];
+			// Cardinals
+			if(world[x] && world[x][y+1]){
+				adj.push([x,y+1]);
+			}
+			if(world[x] && world[x][y-1]){
+				adj.push([x,y-1]);
+			}
+			if(world[x-1] && world[x-1][y]){
+				adj.push([x-1,y]);
+			}
+			if(world[x+1] && world[x+1][y]){
+				adj.push([x+1,y]);
+			}
+			// Diagonals
+			if(world[x+1] && world[x+1][y+1]){
+				adj.push([x+1,y+1]);
+			}
+			if(world[x+1] && world[x+1][y-1]){
+				adj.push([x+1,y-1]);
+			}
+			if(world[x-1] && world[x-1][y+1]){
+				adj.push([x-1,y+1]);
+			}
+			if(world[x-1] && world[x-1][y-1]){
+				adj.push([x-1,y-1]);
+			}
+			return adj;
+		}
+		var floodFillQueue = [[0,0]];
+		var currentNode;
+		var adj = [];
+		//while(floodFillQueue.length) {
+			//console.log(floodFillQueue.length);
+			//var currentNode = floodFillQueue.shift();
+			//world[currentNode[0]][currentNode[1]].biome = 'O'
+			//var adj = getAdjacentPoints(currentNode[0],currentNode[1]);
+			//for(var point of adj) {
+				//if(world[point[0]][point[1]].biome == 'W') {
+					//floodFillQueue.push([point[0],point[1]]);
+				//}
+			//}
+			//if(floodFillQueue.length%100 === 0)
+				//alert(floodFillQueue.length);
+		//}
 	}
-
 	getNoise();
 }
+function drawWorld() {
+	for( var i=0;i<boardN;i++) {
+		for (var j=0;j<boardN;j++) {
+			context.beginPath();
+			context.rect(blockSize*i,blockSize*j,blockSize,blockSize);
+			switch(world[i][j].biome){
+				case 'WATER': context.fillStyle = '#1CA3EC';
+					break;
+				case 'OCEAN': context.fillStyle = '#0000BB';
+					break;
+				case 'BEACH': context.fillStyle = '#3CC3FC';
+					break;
+				case 'FOREST': context.fillStyle = '#3E7E62';
+					break;
+				case 'JUNGLE': context.fillStyle = '#A5BD7E';
+					break;
+				case 'GRASSLAND': context.fillStyle = '#BED2AE';
+					break;
+				case 'CAPS': context.fillStyle = '#AAAAAA';
+					break;
+				case 'MOUNTAIN': context.fillStyle = '#888888';
+					break;
+				case 'SNOW': context.fillStyle = '#FFFFFF';
+					break;
+			}
+			context.fill();
+		}
+	}
+}
 proceduralGenerate();
+drawWorld();
