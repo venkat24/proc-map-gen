@@ -1,7 +1,7 @@
 import SimplexNoise from "simplex-noise";
 import { config } from "./config";
 
-const simplex = new SimplexNoise();
+const perlin = new SimplexNoise(config.seed);
 
 function mapGenerator2D(centerPos, dimensions) {
 	const xLength = dimensions.x;
@@ -32,20 +32,25 @@ function mapGen(dimensions) {
 			const centerPos = config.dim.x / 2;
 			const x = multiplier * i / (xLength / 2);
 			const y = multiplier * j / (yLength / 2);
+
+
 			var noiseVal = Math.round(config.dim.z * Math.abs(10 * (
-				simplex.noise2D(x, y)
-				+ 0.6 * simplex.noise2D(2 * x, 2 * y)
-				+ 0.3 * simplex.noise2D(4 * x, 4 * y)
-				+ 0.13 * simplex.noise2D(8 * x, 8 * y)
-				+ 0.08 * simplex.noise2D(16 * x, 16 * y)
-				+ 0.04 * simplex.noise2D(32 * x, 32 * y)
+				  1  * perlin.noise2D(1 * x, 1 * y)
+				+ 0.5 * perlin.noise2D(2 * x, 2 * y)
+				+ 0.25 * perlin.noise2D(4 * x, 4 * y)
+				+ 0.125 * perlin.noise2D(8 * x, 8 * y)
+				+ 0.0625 * perlin.noise2D(16 * x, 16 * y)
+				+ 0.03125 * perlin.noise2D(32 * x, 32 * y)
 			)) / 10);
 
-			const baseElevation = 7;
 			const distance = Math.sqrt(Math.pow(i-centerPos,2) + Math.pow(j-centerPos,2));
+
 			const distanceDropOff = Math.pow(distance*0.3, 1.41);
-			noiseVal = noiseVal - distanceDropOff + baseElevation;
-			heightMap.push(noiseVal);
+
+			noiseVal = noiseVal - distanceDropOff;
+
+
+			heightMap.push(noiseVal + config.baseElevation);
 		}
 	}
 

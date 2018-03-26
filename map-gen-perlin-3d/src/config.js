@@ -6,5 +6,9 @@ export const config = {
 	},
 	blockSize: 10,
 	waterThresh: 0.16,
-	seed: 20
+	baseElevation: 7,
+	perlinDensityMultiplier: 1,
+
+	seed: 666,
+	perlinMode: false,
 };

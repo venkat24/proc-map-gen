@@ -15,8 +15,8 @@
 
 	this.enabled = true;
 
-	this.movementSpeed = 1.0;
-	this.movementSpeedFastMultiplier = 5.0;
+	this.movementSpeed = 10;
+	this.movementSpeedFastMultiplier = 7.0;
 	this.lookSpeed = 0.005;
 
 	this.lookVertical = true;

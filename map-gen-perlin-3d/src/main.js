@@ -28,25 +28,62 @@ var rotateCounterClockwise = function(matrix) {
 };
 
 function getColor(k) {
-	const baseVal = config.dim.z;
-	if ( k < baseVal*(config.waterThresh - 0.05))
-		return '#1CA3EC';
-	else if ( k < baseVal*config.waterThresh )
-		return '#3CC3FC';
-	else if ( k < baseVal*0.27 )
-		return '#3E7E62';
-	else if ( k < baseVal*0.40 )
-		return '#3E7E62';
-	else if ( k < baseVal*0.56 )
-		return '#A5BD7E';
-	else if ( k < baseVal*0.67 )
-		return '#BED2AE';
-	else if ( k < baseVal*0.79 )
-		return '#AAAAAA';
-	else if ( k < baseVal*0.96 )
-		return '#888888';
-	else
-		return '#EEEEEE';
+    if ( k < (config.waterThresh - 0.05))
+	return {
+	    base: '#1CA3EC',
+	    final: '#1CA3EC',
+	    baseRatio: 0,
+	    finalRatio: config.waterThresh - 0.05
+	};
+    else if ( k < config.waterThresh )
+	return {
+	    base: '#1CA3EC',
+	    final: '#3CC3FC',
+	    baseRatio: config.waterThresh - 0.05,
+	    finalRatio: config.waterThresh
+	};
+    else if ( k < 0.33 )
+	return {
+	    base: '#3E7E62',
+	    final: '#3E7E62',
+	    baseRatio: config.waterThresh,
+	    finalRatio: 0.33
+	};
+    else if ( k < 0.56 )
+	return {
+	    base: '#3E7E62',
+	    final: '#A5BD7E',
+	    baseRatio: 0.33,
+	    finalRatio: 0.56
+	};
+    else if ( k < 0.67 )
+	return {
+	    base: '#A5BD7E',
+	    final: '#BED2AE',
+	    baseRatio: 0.56,
+	    finalRatio: 0.67
+	};
+    else if ( k < 0.79 )
+	return {
+	    base: '#BED2AE',
+	    final: '#AAAAAA',
+	    baseRatio: 0.67,
+	    finalRatio: 0.79
+	};
+    else if ( k < 0.96 )
+	return {
+	    base: '#AAAAAA',
+	    final: '#888888',
+	    baseRatio: 0.79,
+	    finalRatio: 0.96
+	};
+    else
+	return {
+	    base: '#EEEEEE',
+	    final: '#EEEEEE',
+	    baseRatio: 0.96,
+	    finalRatio: 1
+	};
 }
 
 function hexToRgb(hex) {
@@ -286,11 +323,51 @@ function initPlane() {
 	//console.log(newHeightMap)
 
 	var colorMap = new Uint8Array(3 * heightMap.length);
-	for (var i = 0; i < heightMap.length; ++i) {
+	if (config.perlinMode) {
+	    for (var i = 0; i < heightMap.length; ++i) {
 		var stride = i * 3;
-		colorMap[ stride ] = hexToRgb(getColor(heightMap[i])).r;
-		colorMap[ stride + 1 ] = hexToRgb(getColor(heightMap[i])).g;
-		colorMap[ stride + 2 ] = hexToRgb(getColor(heightMap[i])).b;
+		var colorRef = heightMap[i] / config.dim.z;
+		if (colorRef <= 0) {
+		    if (colorRef < -1) {
+			colorRef = -1;
+		    }
+		    colorRef = -1 * colorRef * config.waterThresh;
+		}
+		if (colorRef >= 1) {
+		    colorRef = 1;
+		}
+		colorMap[ stride ] = Math.floor(colorRef * 255);
+		colorMap[ stride + 1 ] = Math.floor(colorRef * 255);
+		colorMap[ stride + 2 ] = Math.floor(colorRef * 255);
+	    }
+	} else {
+	    for (var i = 0; i < heightMap.length; ++i) {
+		var stride = i * 3;
+		var colorRef = heightMap[i] / config.dim.z;
+		if (colorRef > 1) {
+		    colorRef = 1;
+		}
+		if (colorRef < 0) {
+		    colorRef = 0;
+		}
+
+		var colorData = getColor(colorRef);
+
+		var ratioDiff = colorData.finalRatio - colorData.baseRatio
+		var colorRatioDiff = colorRef - colorData.baseRatio;
+		var multiplier = colorRatioDiff / ratioDiff;
+
+		var colorStart = hexToRgb(colorData.base);
+		var colorEnd = hexToRgb(colorData.final);
+
+		var r = Math.floor(colorStart.r + multiplier*(colorEnd.r - colorStart.r));
+		var g = Math.floor(colorStart.g + multiplier*(colorEnd.g - colorStart.g));
+		var b = Math.floor(colorStart.b + multiplier*(colorEnd.b - colorStart.b));
+		
+		colorMap[ stride ] = r;
+		colorMap[ stride + 1 ] = g;
+		colorMap[ stride + 2 ] = b;
+	    }
 	}
 
 	var texture = new THREE.DataTexture(
@@ -314,21 +391,21 @@ function init() {
 
 	scene = new THREE.Scene();
 	scene.background = new THREE.Color( 0x87ceeb );
-	scene.fog = new THREE.Fog( 0x050505, 2000, 4000 );
+	scene.fog = new THREE.Fog( 0x050505, 2000, 15000 );
 
-	var light = new THREE.PointLight( 0xffe3ba, 0.5 );
-	light.position.set( config.dim.x/2, 0, 400 );
-	light.castShadow = true;
+	//var light = new THREE.PointLight( 0xffe3ba, 0.5 );
+	//light.position.set( config.dim.x/2, 0, 400 );
+	//light.castShadow = true;
 	//scene.add( light );
 
-	var aLight = new THREE.AmbientLight( 0xffe3ba, 0.5 );
+	var aLight = new THREE.AmbientLight( 0xffe3ba, 1.0 );
 	scene.add( aLight );
 
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
 	camera.position.z = curPos.z;
 	camera.lookAt(new THREE.Vector3(0, 10, 0));
-	camera.add( light );
-	scene.add( camera );
+	//camera.add( light );
+	//scene.add( camera );
 
 	scene.background = new THREE.CubeTextureLoader()
 		.load( [ px, nx, py, ny, pz, nz ] );
