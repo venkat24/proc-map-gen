@@ -9,7 +9,7 @@ module.exports = {
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'public/dist'),
-        publicPath: '/dist/'
+        publicPath: '/proc-map-gen/map-gen-perlin-3d/public/dist/'
     },
 
     devServer: {
