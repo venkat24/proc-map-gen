@@ -1,6 +1,6 @@
 # Procedural Map Generation
 
-Hosted at [http://venkatraman.dev/proc-map-gen](http://venkatraman.me/proc-map-gen)
+Hosted at [http://venkatraman.dev/proc-map-gen](http://venkatraman.dev/proc-map-gen)
 
 Experimenting with procedurally generating terrain through various algorithms. This contains some actual map generators, as well as unfinished and failed algorithm trials. (For example the voronoi generator is unfinished and the BFS implementation is failed).
 
